@@ -1,0 +1,43 @@
+name: Deploy Backend to Modal
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'SPV_online/backend/**'
+      - 'backend/**'
+      - '.github/workflows/deploy-modal.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Modal Serverless Cloud
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Modal CLI
+        run: |
+          python -m pip install --upgrade pip
+          pip install modal
+
+      - name: Deploy to Modal
+        env:
+          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+        run: |
+          if [ -d "SPV_online/backend" ]; then
+            cd SPV_online/backend
+          else
+            cd backend
+          fi
+          modal deploy modal_app.py

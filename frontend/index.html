@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>منظومة إصدار شهادات الرفع المساحي والتقاطعات الجغرافية - النسخة السحابية</title>
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png">
+  <link rel="apple-touch-icon" href="assets/app_icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --card-hover: #162032;
+      --border: #1f2937;
+      --border-focus: #3b82f6;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-glow: rgba(37, 99, 235, 0.25);
+      --success: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.12);
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.12);
+      --danger: #ef4444;
+      --danger-bg: rgba(239, 68, 68, 0.12);
+      --radius: 14px;
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Cairo', 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    .container {
+      max-width: 1120px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(30, 41, 59, 0.85) 100%);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .app-logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      object-fit: cover;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+      border: 1.5px solid rgba(56, 189, 248, 0.4);
+      background: #0b1120;
+    }
+
+    .brand-text h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.3;
+    }
+
+    .brand-text p {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge-cloud {
+      font-size: 0.8rem;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .badge-cloud::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .btn-icon-setting {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 10px;
+      padding: 7px 12px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-icon-setting:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.1);
+      border-color: #4b5563;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    }
+
+    /* Dropzone Section */
+    .dropzone-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .dropzone {
+      border: 2px dashed #374151;
+      border-radius: var(--radius);
+      background: rgba(17, 24, 39, 0.6);
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--primary);
+      background: rgba(37, 99, 235, 0.08);
+      box-shadow: 0 0 25px rgba(37, 99, 235, 0.2);
+    }
+
+    .dropzone-icon {
+      font-size: 2.4rem;
+      color: #60a5fa;
+    }
+
+    .dropzone-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+
+    .dropzone-desc {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      max-width: 500px;
+    }
+
+    .dropzone-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 6px;
+    }
+
+    .btn {
+      font-family: inherit;
+      padding: 9px 18px;
+      border-radius: 9px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      transition: var(--transition);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: rgba(255, 255, 255, 0.05);
+      color: #e2e8f0;
+      border: 1px solid var(--border);
+    }
+
+    .btn-outline:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: #4b5563;
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* Loaded Files Pill */
+    .loaded-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: #162032;
+      border: 1px solid #2563eb40;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 0.88rem;
+    }
+
+    .loaded-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #93c5fd;
+      font-weight: 600;
+    }
+
+    /* Workspace */
+    #mainWorkspace {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Status Banner */
+    .status-banner {
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 0.94rem;
+    }
+
+    .status-pass {
+      background: var(--success-bg);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34d399;
+    }
+
+    .status-warn {
+      background: var(--warning-bg);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: #fbbf24;
+    }
+
+    /* Metadata Grid */
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .meta-item {
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .meta-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .meta-val {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #ffffff;
+      word-break: break-word;
+    }
+
+    /* Boundary Inputs & Tables */
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      margin-bottom: 14px;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .bounds-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .bound-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .bound-field label {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: #cbd5e1;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .bound-field label span {
+      color: #60a5fa;
+    }
+
+    input[type="text"], input[type="number"], select {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 0.9rem;
+      padding: 9px 12px;
+      transition: var(--transition);
+      outline: none;
+      width: 100%;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    /* Segments Table */
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      text-align: right;
+    }
+
+    th {
+      background: #1e293b;
+      color: #cbd5e1;
+      font-weight: 700;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #1e293b;
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .badge-calc-len {
+      background: #1e293b;
+      color: #60a5fa;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Direction Summary Cards */
+    .dir-summary-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .dir-card {
+      background: #162032;
+      border: 1px solid #1f2937;
+      border-radius: 8px;
+      padding: 8px 12px;
+      text-align: center;
+    }
+
+    .dir-card-title {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .dir-card-val {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #38bdf8;
+      font-family: 'Inter', sans-serif;
+      margin-top: 2px;
+    }
+
+    /* Dual Previews */
+    .previews-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    @media (max-width: 860px) {
+      .previews-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .preview-card {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .preview-frame {
+      width: 100%;
+      height: 310px;
+      background: #0b1120;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .preview-img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .preview-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Generate Action Bar */
+    .action-bar {
+      background: linear-gradient(135deg, #111827 0%, #1e293b 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .btn-generate {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: white;
+      font-size: 1.05rem;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-weight: 800;
+      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
+    }
+
+    .btn-generate:hover:not(:disabled) {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(37, 99, 235, 0.6);
+    }
+
+    /* Modal for API settings */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+
+    .modal-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      max-width: 480px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.4rem;
+      cursor: pointer;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      border: 1px solid #3b82f6;
+      color: #ffffff;
+      padding: 12px 24px;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      z-index: 2000;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, 10px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Top Header -->
+    <header>
+      <div class="brand">
+        <img src="assets/app_icon.png" alt="شعار المنظومة" class="app-logo" onerror="this.style.display='none'">
+        <div class="brand-text">
+          <h1>منظومة إصدار شهادات الرفع المساحي والتقاطعات</h1>
+          <p>النسخة السحابية الرسمية (Modal Backend & Vercel Host)</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="badge-cloud" id="serverStatusBadge" onclick="openApiSettings()" title="اضغط لتغيير رابط الخادم السحابي">
+          <span id="serverStatusText">جارِ التحقق من السيرفر...</span>
+        </div>
+        <button class="btn-icon-setting" onclick="openApiSettings()">
+          ⚙ إعدادات الـ API
+        </button>
+      </div>
+    </header>
+
+    <!-- Upload Card -->
+    <section class="card dropzone-wrap">
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+        <input type="file" id="fileInput" multiple accept=".csv" style="display: none;" onchange="handleFileSelect(event)">
+        <div class="dropzone-icon">📁</div>
+        <div class="dropzone-title">اسحب وأفلت ملفات الرفع المساحي هنا (Land & Areas CSV)</div>
+        <div class="dropzone-desc">قم بإسقاط ملف إحداثيات الأركان (Land_*.csv) وملف تقاطع الأحواض (Areas_*.csv) أو اضغط لاختيارهما معاً.</div>
+        <div class="dropzone-buttons" onclick="event.stopPropagation()">
+          <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+            📤 اختيار الملفات من الجهاز
+          </button>
+          <button class="btn btn-outline" onclick="loadSampleCase()">
+            ⚡ تجربة معاملة توضيحية فورية
+          </button>
+        </div>
+      </div>
+
+      <!-- Loaded File Pill -->
+      <div class="loaded-bar" id="loadedBar">
+        <div class="loaded-info">
+          <span>✔ تم تحميل المعاملة:</span>
+          <strong id="loadedFileName" style="color: #ffffff;">-</strong>
+        </div>
+        <button class="btn btn-outline" style="padding: 4px 12px; font-size: 0.8rem;" onclick="resetLoadedData()">
+          ✕ إفراغ
+        </button>
+      </div>
+    </section>
+
+    <!-- Workspace Container -->
+    <div id="mainWorkspace">
+
+      <!-- Status Banner -->
+      <div class="status-banner" id="areaBanner">
+        <span id="bannerText">✔ المساحة مطابقة قانونياً: فرق المساحة ضمن الحدود المسموحة (±2.0 م2)</span>
+        <span id="bannerDiff" style="font-family: 'Inter', sans-serif;">Δ = +0.00 m²</span>
+      </div>
+
+      <!-- Metadata Card -->
+      <section class="card">
+        <h2 class="section-title">📌 بيانات المعاملة الرسمية</h2>
+        <div class="meta-grid">
+          <div class="meta-item">
+            <span class="meta-label">اسم مقدم الطلب</span>
+            <span class="meta-val" id="valName">-</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">رقم الطلب / المعاملة</span>
+            <span class="meta-val" id="valIdNo">-</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">المركز</span>
+            <span class="meta-val" id="valCenter">-</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">القرية / الشياخة</span>
+            <span class="meta-val" id="valSheikhah">-</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">اسم الحوض المتقاطع</span>
+            <span class="meta-val" id="valHod">-</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">رقم القطعة</span>
+            <span class="meta-val" id="valParcel">-</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">رقم اللوحة المساحية</span>
+            <span class="meta-val" id="valMapId">-</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">المساحة المصرحة</span>
+            <span class="meta-val" id="valStatedArea">-</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">المساحة الجيوديسية المحسوبة</span>
+            <span class="meta-val" id="valCalcArea" style="color: #38bdf8;">-</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">عدد أركان المضلع</span>
+            <span class="meta-val" id="valPoints">-</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Boundary Editing & Segments -->
+      <section class="card">
+        <h2 class="section-title">📐 الحدود الجغرافية وتوصيف المجاورين</h2>
+        <div class="bounds-grid">
+          <div class="bound-field">
+            <label>🌊 الحد البحري <span id="lenNorth">0.00 م</span></label>
+            <input type="text" id="inNorth" placeholder="مثال: شارع بعرض 8 متر" oninput="debounceCroquisUpdate()">
+          </div>
+          <div class="bound-field">
+            <label>🌅 الحد الشرقي <span id="lenEast">0.00 م</span></label>
+            <input type="text" id="inEast" placeholder="مثال: ملك ورثة فلان" oninput="debounceCroquisUpdate()">
+          </div>
+          <div class="bound-field">
+            <label>☀️ الحد القبلي <span id="lenSouth">0.00 م</span></label>
+            <input type="text" id="inSouth" placeholder="مثال: جار ملاصق" oninput="debounceCroquisUpdate()">
+          </div>
+          <div class="bound-field">
+            <label>🌇 الحد الغربي <span id="lenWest">0.00 م</span></label>
+            <input type="text" id="inWest" placeholder="مثال: طريق عام" oninput="debounceCroquisUpdate()">
+          </div>
+        </div>
+
+        <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 10px; color: #94a3b8;">
+          تفاصيل أضلاع مضلع الرفع المساحي وتعديل التوجيه:
+        </h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 140px;">الضلع</th>
+                <th style="width: 170px;">التوجيه الجغرافي</th>
+                <th style="width: 140px;">الطول المحسوب</th>
+                <th>الطول المعتمد (م)</th>
+              </tr>
+            </thead>
+            <tbody id="segmentsTableBody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Direction Totals -->
+        <div class="dir-summary-bar">
+          <div class="dir-card">
+            <div class="dir-card-title">🌊 مجموع البحري</div>
+            <div class="dir-card-val" id="sumNorth">0.00</div>
+          </div>
+          <div class="dir-card">
+            <div class="dir-card-title">🌅 مجموع الشرقي</div>
+            <div class="dir-card-val" id="sumEast">0.00</div>
+          </div>
+          <div class="dir-card">
+            <div class="dir-card-title">☀️ مجموع القبلي</div>
+            <div class="dir-card-val" id="sumSouth">0.00</div>
+          </div>
+          <div class="dir-card">
+            <div class="dir-card-title">🌇 مجموع الغربي</div>
+            <div class="dir-card-val" id="sumWest">0.00</div>
+          </div>
+          <div class="dir-card" style="border-color: #3b82f6;">
+            <div class="dir-card-title">مجموع المحيط الكامل</div>
+            <div class="dir-card-val" id="sumTotal" style="color: #60a5fa;">0.00</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Previews -->
+      <section class="card">
+        <h2 class="section-title">🖼 المعاينة التفاعلية المباشرة</h2>
+        <div class="previews-grid">
+          
+          <!-- CAD Croquis Preview -->
+          <div class="preview-card">
+            <div class="preview-header">
+              <span>📐 كروكي الأبعاد الهندسي (CAD)</span>
+              <div class="preview-actions">
+                <input type="file" id="customCroqInput" accept="image/*" style="display:none;" onchange="uploadCustomImage(event, 'croquis')">
+                <button class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem;" onclick="document.getElementById('customCroqInput').click()">
+                  استبدال
+                </button>
+                <button class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem;" onclick="updateCadCroquis()">
+                  🔄 تحديث
+                </button>
+              </div>
+            </div>
+            <div class="preview-frame">
+              <img id="imgCroq" class="preview-img" alt="كروكي الأبعاد" src="">
+            </div>
+          </div>
+
+          <!-- Satellite Preview -->
+          <div class="preview-card">
+            <div class="preview-header">
+              <span>🛰 صورة القمر الصناعي (Google Satellite)</span>
+              <div class="preview-actions">
+                <input type="file" id="customSatInput" accept="image/*" style="display:none;" onchange="uploadCustomImage(event, 'satellite')">
+                <button class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem;" onclick="document.getElementById('customSatInput').click()">
+                  استبدال
+                </button>
+                <button class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem;" onclick="loadSatellitePreview()">
+                  🔄 جلب
+                </button>
+              </div>
+            </div>
+            <div class="preview-frame">
+              <img id="imgSat" class="preview-img" alt="صورة القمر الصناعي" src="">
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Action Footer -->
+      <div class="action-bar">
+        <div>
+          <strong style="font-size: 1.05rem; color: #ffffff;">جاهز لإصدار الشهادة الرسمية</strong>
+          <p style="font-size: 0.84rem; color: var(--text-muted); margin-top: 2px;">
+            سيتم توليد ملف Word الرسمي معتمد وتجميع الصور الملحقة في ملف ZIP قابل للتنزيل فوراً.
+          </p>
+        </div>
+        <button class="btn btn-generate" id="btnGenerate" onclick="generateOfficialPackage()">
+          ⚡ إصدار وتنزيل حزمة الشهادة الرسمية (.ZIP)
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- API Settings Modal -->
+  <div class="modal-overlay" id="apiModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">⚙ إعدادات خادم المعالجة (API Backend)</h3>
+        <button class="modal-close" onclick="closeApiSettings()">✕</button>
+      </div>
+      <p style="font-size: 0.86rem; color: var(--text-muted);">
+        يمكنك التبديل بين خادم Modal السحابي أو السيرفر المحلي أثناء التطوير:
+      </p>
+      <div>
+        <label style="font-size: 0.82rem; font-weight: 700; color: #cbd5e1; display: block; margin-bottom: 6px;">
+          رابط الـ API Base URL:
+        </label>
+        <input type="text" id="apiBaseUrlInput" placeholder="https://username--spv-cert-suite.modal.run أو http://localhost:8000">
+      </div>
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px;">
+        <button class="btn btn-outline" onclick="testApiConnection()">🔍 فحص الاتصال</button>
+        <button class="btn btn-primary" onclick="saveApiSettings()">حفظ واعتماد</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toastMsg"></div>
+
+  <script>
+    // State
+    let currentCaseData = null;
+    let originalSegments = [];
+    let customCroquisBase64 = null;
+    let customSatelliteBase64 = null;
+    let croquisDebounceTimer = null;
+
+    // API Config
+    const DEFAULT_MODAL_API = "https://killd00zer--spv-cert-suite-modal-asgi.modal.run";
+    let apiBaseUrl = localStorage.getItem("spv_api_base_url") || DEFAULT_MODAL_API;
+
+    function getApiUrl(endpoint) {
+      const base = apiBaseUrl.trim() ? apiBaseUrl.trim().replace(/\/+$/, '') : "";
+      return base + endpoint;
+    }
+
+    // Init & Health Check
+    window.addEventListener("DOMContentLoaded", () => {
+      initDropzone();
+      checkServerHealth();
+    });
+
+    async function checkServerHealth() {
+      const badge = document.getElementById("serverStatusBadge");
+      const text = document.getElementById("serverStatusText");
+
+      try {
+        const res = await fetch(getApiUrl("/api/health"), { method: "GET" });
+        if (res.ok) {
+          const data = await res.json();
+          text.textContent = apiBaseUrl.includes("modal.run") ? "متصل (Modal Cloud ☁)" : "متصل بالخادم ✔";
+          badge.style.borderColor = "rgba(16, 185, 129, 0.4)";
+          badge.style.background = "rgba(16, 185, 129, 0.12)";
+          badge.style.color = "#34d399";
+        } else {
+          throw new Error("HTTP " + res.status);
+        }
+      } catch (err) {
+        text.textContent = "غير متصل بالسيرفر ⚠";
+        badge.style.borderColor = "rgba(239, 68, 68, 0.4)";
+        badge.style.background = "rgba(239, 68, 68, 0.12)";
+        badge.style.color = "#f87171";
+      }
+    }
+
+    // Dropzone setup
+    function initDropzone() {
+      const dz = document.getElementById("dropzone");
+      ['dragenter', 'dragover'].forEach(name => {
+        dz.addEventListener(name, (e) => { e.preventDefault(); dz.classList.add("dragover"); });
+      });
+      ['dragleave', 'drop'].forEach(name => {
+        dz.addEventListener(name, (e) => { e.preventDefault(); dz.classList.remove("dragover"); });
+      });
+      dz.addEventListener("drop", (e) => {
+        const files = Array.from(e.dataTransfer.files);
+        handleFiles(files);
+      });
+    }
+
+    function handleFileSelect(e) {
+      const files = Array.from(e.target.files);
+      handleFiles(files);
+    }
+
+    async function handleFiles(files) {
+      if (!files || files.length === 0) return;
+
+      let landFile = files.find(f => f.name.toLowerCase().startsWith("land_") || f.name.toLowerCase().includes("land"));
+      let areasFile = files.find(f => f.name.toLowerCase().startsWith("areas_") || f.name.toLowerCase().includes("areas"));
+
+      if (!landFile) {
+        // Fallback: take first csv as land file
+        landFile = files.find(f => f.name.toLowerCase().endsWith(".csv"));
+      }
+
+      if (!landFile) {
+        alert("يرجى اختيار ملف CSV يحتوي على أركان وإحداثيات الأرض (Land_*.csv)");
+        return;
+      }
+
+      const landContent = await readFileAsText(landFile);
+      const areasContent = areasFile ? await readFileAsText(areasFile) : "";
+
+      await processCsvUpload(landContent, areasContent, landFile.name);
+    }
+
+    function readFileAsText(file) {
+      return new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = e => resolve(e.target.result);
+        r.onerror = reject;
+        r.readAsText(file, "utf-8");
+      });
+    }
+
+    async function processCsvUpload(landText, areasText, displayName) {
+      showToast("⏳ جاري تحليل بيانات الرفع المساحي...");
+
+      try {
+        const res = await fetch(getApiUrl("/api/parse-csv"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ land_csv: landText, areas_csv: areasText })
+        });
+
+        const data = await res.json();
+        if (data.detail) throw new Error(data.detail);
+
+        currentCaseData = data;
+        customCroquisBase64 = null;
+        customSatelliteBase64 = null;
+
+        // UI Updates
+        document.getElementById("loadedFileName").textContent = displayName;
+        document.getElementById("loadedBar").style.display = "flex";
+        renderCaseWorkspace();
+        showToast("✔ تم تحليل البيانات بنجاح!");
+      } catch (err) {
+        alert("خطأ أثناء تحليل ملف الـ CSV: " + err.message);
+      }
+    }
+
+    // Demo Sample Case
+    function loadSampleCase() {
+      const sampleLand = `POINT_NUM,POINT_X,POINT_Y,ORIG_FID,name,id_no,Center,Sheikhah,place,area,unit
+1,31.25000000,30.05000000,1,محمد أحمد علي حسن,101,مركز طنطا,كفر الشيخ سليم,ناحية داير الناحية,500.00,م2
+2,31.25020740,30.05000000,1,محمد أحمد علي حسن,101,مركز طنطا,كفر الشيخ سليم,ناحية داير الناحية,500.00,م2
+3,31.25020740,30.05022550,1,محمد أحمد علي حسن,101,مركز طنطا,كفر الشيخ سليم,ناحية داير الناحية,500.00,م2
+4,31.25000000,30.05022550,1,محمد أحمد علي حسن,101,مركز طنطا,كفر الشيخ سليم,ناحية داير الناحية,500.00,م2
+5,31.25000000,30.05000000,1,محمد أحمد علي حسن,101,مركز طنطا,كفر الشيخ سليم,ناحية داير الناحية,500.00,م2`;
+
+      const sampleAreas = `hod_name,parcel_id,map_id,overlap_area_m2
+حوض النجيل القبلي نمرة 4,15,89/640,500.00`;
+
+      processCsvUpload(sampleLand, sampleAreas, "Land_101_محمد_احمد.csv (نموذج اختباري)");
+    }
+
+    function resetLoadedData() {
+      currentCaseData = null;
+      document.getElementById("mainWorkspace").style.display = "none";
+      document.getElementById("loadedBar").style.display = "none";
+      document.getElementById("fileInput").value = "";
+    }
+
+    // Render Case Data
+    function renderCaseWorkspace() {
+      const d = currentCaseData;
+      const m = d.metadata || {};
+
+      document.getElementById("mainWorkspace").style.display = "flex";
+
+      // Metadata
+      document.getElementById("valName").textContent = m.name || "-";
+      document.getElementById("valIdNo").textContent = m.id_no || "-";
+      document.getElementById("valCenter").textContent = m.Center || "-";
+      document.getElementById("valSheikhah").textContent = m.Sheikhah || "-";
+      document.getElementById("valHod").textContent = m.hod_name || "-";
+      document.getElementById("valParcel").textContent = m.parcel_id || "-";
+      document.getElementById("valMapId").textContent = m.map_id || "-";
+      document.getElementById("valStatedArea").textContent = `${d.stated_area} ${m.unit || 'م2'}`;
+      document.getElementById("valCalcArea").textContent = `${d.calculated_area} م2`;
+      document.getElementById("valPoints").textContent = `${d.vertices.length} نقاط أركان`;
+
+      // Area tolerance banner
+      const banner = document.getElementById("areaBanner");
+      const bText = document.getElementById("bannerText");
+      const bDiff = document.getElementById("bannerDiff");
+
+      if (d.is_area_valid) {
+        banner.className = "status-banner status-pass";
+        bText.textContent = "✔ المساحة مطابقة قانونياً: فرق المساحة ضمن الحدود المسموحة (±2.0 م2)";
+        bDiff.textContent = `Δ = ${d.area_difference} m² (مطابق)`;
+      } else {
+        banner.className = "status-banner status-warn";
+        bText.textContent = "⚠ تنبيه: فارق المساحة يتجاوز الحدود المسموحة (يتطلب مراجعة)";
+        bDiff.textContent = `Δ = ${d.area_difference} m² (تجاوز)`;
+      }
+
+      // Default boundaries
+      document.getElementById("inNorth").value = "شارع بعرض 8 متر";
+      document.getElementById("inEast").value = "ملك ورثة أحمد حسن";
+      document.getElementById("inSouth").value = "جار ملاصق";
+      document.getElementById("inWest").value = "طريق عام";
+
+      renderSegmentsTable(d.segments);
+      loadSatellitePreview();
+      updateCadCroquis();
+    }
+
+    // Render Segments
+    function renderSegmentsTable(segments) {
+      originalSegments = segments ? JSON.parse(JSON.stringify(segments)) : [];
+      const tbody = document.getElementById("segmentsTableBody");
+      tbody.innerHTML = "";
+
+      if (!segments || segments.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">لا توجد أضلاع</td></tr>';
+        updateDirectionSums();
+        return;
+      }
+
+      segments.forEach((seg, idx) => {
+        const tr = document.createElement("tr");
+        const fromPt = seg.from_point;
+        const toPt = seg.to_point;
+        const calcLen = typeof seg.length_m === "number" ? seg.length_m.toFixed(2) : seg.length_m;
+        const dir = (seg.direction || "north").toLowerCase();
+
+        tr.innerHTML = `
+          <td><strong>نقطة ${fromPt} ➔ نقطة ${toPt}</strong></td>
+          <td>
+            <select id="seg_dir_${idx}" onchange="onSegmentChange()">
+              <option value="north" ${dir === 'north' ? 'selected' : ''}>🌊 الحد البحري</option>
+              <option value="east" ${dir === 'east' ? 'selected' : ''}>🌅 الحد الشرقي</option>
+              <option value="south" ${dir === 'south' ? 'selected' : ''}>☀️ الحد القبلي</option>
+              <option value="west" ${dir === 'west' ? 'selected' : ''}>🌇 الحد الغربي</option>
+            </select>
+          </td>
+          <td><span class="badge-calc-len">${calcLen} م</span></td>
+          <td>
+            <input type="number" step="0.01" min="0" id="seg_len_${idx}" value="${calcLen}" oninput="onSegmentChange()" style="max-width: 140px;" />
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      updateDirectionSums();
+    }
+
+    function onSegmentChange() {
+      updateDirectionSums();
+      debounceCroquisUpdate();
+    }
+
+    function updateDirectionSums() {
+      const sums = { north: 0, east: 0, south: 0, west: 0 };
+      let total = 0;
+
+      if (originalSegments && originalSegments.length > 0) {
+        for (let i = 0; i < originalSegments.length; i++) {
+          const lenInp = document.getElementById(`seg_len_${i}`);
+          const dirSel = document.getElementById(`seg_dir_${i}`);
+          const len = lenInp ? (parseFloat(lenInp.value) || 0) : 0;
+          const dir = dirSel ? dirSel.value : (originalSegments[i].direction || 'north');
+          if (sums[dir] !== undefined) {
+            sums[dir] += len;
+          }
+          total += len;
+        }
+      }
+
+      document.getElementById("sumNorth").textContent = sums.north.toFixed(2);
+      document.getElementById("sumEast").textContent = sums.east.toFixed(2);
+      document.getElementById("sumSouth").textContent = sums.south.toFixed(2);
+      document.getElementById("sumWest").textContent = sums.west.toFixed(2);
+      document.getElementById("sumTotal").textContent = total.toFixed(2);
+
+      document.getElementById("lenNorth").textContent = sums.north.toFixed(2) + " م";
+      document.getElementById("lenEast").textContent = sums.east.toFixed(2) + " م";
+      document.getElementById("lenSouth").textContent = sums.south.toFixed(2) + " م";
+      document.getElementById("lenWest").textContent = sums.west.toFixed(2) + " م";
+    }
+
+    function getEditedSegments() {
+      const segs = [];
+      for (let i = 0; i < originalSegments.length; i++) {
+        const lenInp = document.getElementById(`seg_len_${i}`);
+        const dirSel = document.getElementById(`seg_dir_${i}`);
+        const len = lenInp ? (parseFloat(lenInp.value) || 0.0) : 0.0;
+        const dir = dirSel ? dirSel.value : 'north';
+        segs.push({ length_m: len, direction: dir });
+      }
+      return segs;
+    }
+
+    function debounceCroquisUpdate() {
+      if (croquisDebounceTimer) clearTimeout(croquisDebounceTimer);
+      croquisDebounceTimer = setTimeout(() => {
+        updateCadCroquis();
+      }, 500);
+    }
+
+    // Previews
+    async function updateCadCroquis() {
+      if (!currentCaseData) return;
+      const imgCroq = document.getElementById("imgCroq");
+      imgCroq.alt = "جاري رسم كروكي الـ CAD...";
+
+      const bounds = {
+        north: document.getElementById("inNorth").value.trim(),
+        east: document.getElementById("inEast").value.trim(),
+        south: document.getElementById("inSouth").value.trim(),
+        west: document.getElementById("inWest").value.trim()
+      };
+
+      try {
+        const res = await fetch(getApiUrl("/api/preview-croquis"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            vertices: currentCaseData.vertices,
+            boundaries: bounds,
+            edited_segments: getEditedSegments()
+          })
+        });
+
+        const data = await res.json();
+        if (data.croquis_url) {
+          imgCroq.src = data.croquis_url;
+        }
+      } catch (err) {
+        console.error("CAD preview error:", err);
+      }
+    }
+
+    async function loadSatellitePreview() {
+      if (!currentCaseData) return;
+      const imgSat = document.getElementById("imgSat");
+      imgSat.alt = "جاري تنزيل وتدقيق القمر الصناعي...";
+
+      try {
+        const res = await fetch(getApiUrl("/api/preview-satellite"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            vertices: currentCaseData.vertices,
+            stated_area: currentCaseData.stated_area
+          })
+        });
+
+        const data = await res.json();
+        if (data.satellite_url) {
+          imgSat.src = data.satellite_url;
+        }
+      } catch (err) {
+        console.error("Satellite error:", err);
+      }
+    }
+
+    function uploadCustomImage(event, type) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const b64 = e.target.result;
+        if (type === "satellite") {
+          customSatelliteBase64 = b64;
+          document.getElementById("imgSat").src = b64;
+          showToast("✔ تم تحميل الصورة الفضائية المخصصة بنجاح");
+        } else {
+          customCroquisBase64 = b64;
+          document.getElementById("imgCroq").src = b64;
+          showToast("✔ تم تحميل كروكي CAD المخصص بنجاح");
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Generate Package & Direct Download
+    async function generateOfficialPackage() {
+      if (!currentCaseData) return;
+      const btn = document.getElementById("btnGenerate");
+      const originalText = btn.innerHTML;
+      btn.innerHTML = "⏳ جاري إصدار وتجهيز حزمة الشهادة...";
+      btn.disabled = true;
+
+      const bounds = {
+        north: document.getElementById("inNorth").value.trim(),
+        east: document.getElementById("inEast").value.trim(),
+        south: document.getElementById("inSouth").value.trim(),
+        west: document.getElementById("inWest").value.trim()
+      };
+
+      const landPayload = {
+        ...currentCaseData.metadata,
+        calc_area: currentCaseData.calculated_area,
+        vertices: currentCaseData.vertices
+      };
+
+      try {
+        const res = await fetch(getApiUrl("/api/generate-certificate"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            land_data: landPayload,
+            areas_list: currentCaseData.areas,
+            boundaries: bounds,
+            custom_sat_base64: customSatelliteBase64,
+            custom_croq_base64: customCroquisBase64,
+            edited_segments: getEditedSegments(),
+            survey_tech: "محمد ابراهيم بدير",
+            sys_officer: "شريف محمد"
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.detail || "فشل توليد الشهادة من السيرفر.");
+        }
+
+        // Trigger browser download of ZIP
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.style.display = "none";
+        a.href = url;
+
+        const caseId = currentCaseData.metadata.id_no || "101";
+        const name = currentCaseData.metadata.name || "Owner";
+        a.download = `Certificate_Package_${caseId}_${name}.zip`;
+
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        showToast("🎉 تم تنزيل حزمة الشهادة الرسمية بنجاح!");
+      } catch (err) {
+        alert("خطأ أثناء إصدار الشهادة: " + err.message);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    // Modal Settings
+    function openApiSettings() {
+      document.getElementById("apiBaseUrlInput").value = apiBaseUrl;
+      document.getElementById("apiModal").style.display = "flex";
+    }
+
+    function closeApiSettings() {
+      document.getElementById("apiModal").style.display = "none";
+    }
+
+    async function testApiConnection() {
+      const url = document.getElementById("apiBaseUrlInput").value.trim().replace(/\/+$/, '');
+      try {
+        const res = await fetch(url + "/api/health");
+        if (res.ok) {
+          alert("✔ الاتصال بالسيرفر ناجح تماماً!");
+        } else {
+          alert("⚠ استجاب السيرفر بكود: " + res.status);
+        }
+      } catch (e) {
+        alert("❌ تعذر الاتصال بالسيرفر: " + e.message);
+      }
+    }
+
+    function saveApiSettings() {
+      const url = document.getElementById("apiBaseUrlInput").value.trim();
+      apiBaseUrl = url;
+      localStorage.setItem("spv_api_base_url", url);
+      closeApiSettings();
+      checkServerHealth();
+      showToast("✔ تم حفظ إعدادات الـ API بنجاح");
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById("toastMsg");
+      t.textContent = msg;
+      t.style.display = "block";
+      setTimeout(() => { t.style.display = "none"; }, 4000);
+    }
+  </script>
+</body>
+</html>
