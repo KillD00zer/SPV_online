@@ -720,19 +720,19 @@
         <div class="bounds-grid">
           <div class="bound-field">
             <label>🌊 الحد البحري <span id="lenNorth">0.00 م</span></label>
-            <input type="text" id="inNorth" placeholder="مثال: شارع بعرض 8 متر" oninput="debounceCroquisUpdate()">
+            <input type="text" id="inNorth" placeholder="وصف الحد والجار (اختياري)..." oninput="debounceCroquisUpdate()">
           </div>
           <div class="bound-field">
             <label>🌅 الحد الشرقي <span id="lenEast">0.00 م</span></label>
-            <input type="text" id="inEast" placeholder="مثال: ملك ورثة فلان" oninput="debounceCroquisUpdate()">
+            <input type="text" id="inEast" placeholder="وصف الحد والجار (اختياري)..." oninput="debounceCroquisUpdate()">
           </div>
           <div class="bound-field">
             <label>☀️ الحد القبلي <span id="lenSouth">0.00 م</span></label>
-            <input type="text" id="inSouth" placeholder="مثال: جار ملاصق" oninput="debounceCroquisUpdate()">
+            <input type="text" id="inSouth" placeholder="وصف الحد والجار (اختياري)..." oninput="debounceCroquisUpdate()">
           </div>
           <div class="bound-field">
             <label>🌇 الحد الغربي <span id="lenWest">0.00 م</span></label>
-            <input type="text" id="inWest" placeholder="مثال: طريق عام" oninput="debounceCroquisUpdate()">
+            <input type="text" id="inWest" placeholder="وصف الحد والجار (اختياري)..." oninput="debounceCroquisUpdate()">
           </div>
         </div>
 
@@ -1049,11 +1049,11 @@
         bDiff.textContent = `Δ = ${d.area_difference} m² (تجاوز)`;
       }
 
-      // Default boundaries
-      document.getElementById("inNorth").value = "شارع بعرض 8 متر";
-      document.getElementById("inEast").value = "ملك ورثة أحمد حسن";
-      document.getElementById("inSouth").value = "جار ملاصق";
-      document.getElementById("inWest").value = "طريق عام";
+      // Clean boundary neighbors by default (empty unless user specifies)
+      document.getElementById("inNorth").value = "";
+      document.getElementById("inEast").value = "";
+      document.getElementById("inSouth").value = "";
+      document.getElementById("inWest").value = "";
 
       renderSegmentsTable(d.segments);
       loadSatellitePreview();

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-High-Precision CAD Dimensions Croquis Engine (Cloud & Modal Ready)
-==================================================================
+High-Precision CAD Dimensions Croquis Engine (Matching project_SPV Exactly)
+==========================================================================
 Official engineering sketch generator (كروكى الموقع):
 - High-contrast white background.
 - Thick black polygon outline.
@@ -10,7 +10,6 @@ Official engineering sketch generator (كروكى الموقع):
 - Neighbor descriptions in bold sky blue (#0284C7, 13pt bold) aligned with edge angles printed OUTSIDE the shape.
 - Semi-transparent North Arrow (بوصلة سهم الشمال) at top-left.
 - Ultra High Resolution output (300 DPI / 1600x1200 / tight bbox).
-- Robust Arabic reshaping and bidi algorithm support for Linux & Cloud containers.
 """
 
 import os
@@ -22,24 +21,11 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon as MplPolygon
 
-# Setup fallback fonts for Arabic text rendering in Linux / Docker / Windows
-plt.rcParams['font.sans-serif'] = ['Cairo', 'DejaVu Sans', 'Arial', 'Tahoma', 'sans-serif']
-plt.rcParams['axes.unicode_minus'] = False
-
-def format_arabic_text(text):
-    """Reshape Arabic characters and apply bidi algorithm for correct display in matplotlib."""
-    if not text:
-        return ""
-    text_str = str(text).strip()
-    try:
-        import arabic_reshaper
-        from bidi.algorithm import get_display
-        reshaped = arabic_reshaper.reshape(text_str)
-        return get_display(reshaped)
-    except Exception:
-        return text_str
-
 def get_edge_cardinal_direction(p1_lon, p1_lat, p2_lon, p2_lat, c_lon, c_lat):
+    """
+    Determines whether a segment belongs to North, South, East, or West
+    relative to parcel geometry.
+    """
     mid_x = (p1_lon + p2_lon) / 2.0 - c_lon
     mid_y = (p1_lat + p2_lat) / 2.0 - c_lat
     dx = p2_lon - p1_lon
@@ -51,6 +37,7 @@ def get_edge_cardinal_direction(p1_lon, p1_lat, p2_lon, p2_lat, c_lon, c_lat):
         return "east" if mid_x > 0 else "west"
 
 def project_to_metric(vertices_lon_lat):
+    """Local metric projection for compatibility"""
     if not vertices_lon_lat:
         return []
     lons = [pt[0] for pt in vertices_lon_lat]
@@ -63,9 +50,12 @@ def project_to_metric(vertices_lon_lat):
 def render_cad_croquis(vertices, boundaries=None, output_image_path=None,
                        edited_segments=None, edited_lengths=None, edited_directions=None):
     """
-    Renders CAD croquis sketch.
-    If output_image_path is provided, saves to disk and returns path.
-    Otherwise returns bytes of PNG image.
+    Renders the official CAD croquis sketch matching project_SPV styling.
+    
+    vertices: list of (lon, lat) tuples or list of dicts [{'lon': ..., 'lat': ...}]
+    boundaries: dict with neighbor descriptions: {'north': '...', 'east': '...', 'south': '...', 'west': '...'}
+    output_image_path: path to save output PNG (if None, returns image bytes)
+    edited_segments: list of segments with {'from_point', 'to_point', 'length_m', 'direction'}
     """
     if not vertices or len(vertices) < 3:
         raise ValueError("At least 3 vertices required to render CAD croquis.")
@@ -108,32 +98,37 @@ def render_cad_croquis(vertices, boundaries=None, output_image_path=None,
     fig.patch.set_facecolor('white')
     ax.set_facecolor('white')
     
-    # 1. Draw parcel polygon outline with strong line weight
+    # 1. Draw parcel polygon outline with strong line weight (linewidth=3.0)
     poly_patch = MplPolygon(pts_2d, closed=True, facecolor='none', edgecolor='black', linewidth=3.0, zorder=2)
     ax.add_patch(poly_patch)
     
-    # Determine polygon orientation
+    # Determine polygon orientation (clockwise vs counter-clockwise)
     signed_area = 0.5 * sum(xs[i] * ys[(i + 1) % n_pts] - xs[(i + 1) % n_pts] * ys[i] for i in range(n_pts))
     is_ccw = signed_area > 0
     
-    # 2. Vertex markers and sequential numbers
+    # 2. Vertex markers and sequential numbers (dark brown font, bright green markers)
     for i in range(n_pts):
         x, y = xs[i], ys[i]
+        
+        # Bright green vertex circle with dark border
         ax.plot(x, y, marker='o', markersize=7.5, markerfacecolor='#00E676', markeredgecolor='black', markeredgewidth=1.5, zorder=4)
         
+        # Outward direction from centroid
         dx = x - 0.0
         dy = y - 0.0
         dist_c = math.hypot(dx, dy) or 1.0
         norm_dx = dx / dist_c
         norm_dy = dy / dist_c
         
+        # Position number slightly outside vertex
         v_offset = max(span_x, span_y) * 0.038
         label_x = x + norm_dx * v_offset
         label_y = y + norm_dy * v_offset
         
+        # Dark brown vertex font (fontsize 11 bold)
         ax.text(label_x, label_y, str(norm_verts[i]["point_index"]),
                 color='#3E2723', fontsize=11, fontweight='bold',
-                ha='center', va='center', zorder=5)
+                fontfamily='Arial', ha='center', va='center', zorder=5)
         
     # Map edges to cardinal neighbor descriptions
     bounds = boundaries or {}
@@ -141,6 +136,8 @@ def render_cad_croquis(vertices, boundaries=None, output_image_path=None,
     
     for i in range(n_pts):
         next_i = (i + 1) % n_pts
+        
+        # Determine length
         length_m = None
         if edited_segments and i < len(edited_segments):
             try:
@@ -155,6 +152,7 @@ def render_cad_croquis(vertices, boundaries=None, output_image_path=None,
         if length_m is None:
             length_m = math.hypot(xs[next_i] - xs[i], ys[next_i] - ys[i])
             
+        # Determine direction
         side = None
         if edited_segments and i < len(edited_segments):
             side = edited_segments[i].get("direction")
@@ -168,7 +166,7 @@ def render_cad_croquis(vertices, boundaries=None, output_image_path=None,
         if side not in side_longest_edge or length_m > side_longest_edge[side][1]:
             side_longest_edge[side] = (i, length_m)
 
-    # 3. Segment length & neighbor annotations
+    # 3. Segment length (INSIDE shape) & neighbor annotations (OUTSIDE shape)
     for i in range(n_pts):
         next_i = (i + 1) % n_pts
         x1, y1 = xs[i], ys[i]
@@ -181,14 +179,17 @@ def render_cad_croquis(vertices, boundaries=None, output_image_path=None,
         edge_dy = y2 - y1
         edge_len = math.hypot(edge_dx, edge_dy) or 1.0
         
+        # Angle of edge
         angle_rad = math.atan2(edge_dy, edge_dx)
         angle_deg = math.degrees(angle_rad)
         
+        # Never upside down
         if angle_deg > 90:
             angle_deg -= 180
         elif angle_deg < -90:
             angle_deg += 180
             
+        # Outward unit normal
         if is_ccw:
             out_nx = edge_dy / edge_len
             out_ny = -edge_dx / edge_len
@@ -196,13 +197,16 @@ def render_cad_croquis(vertices, boundaries=None, output_image_path=None,
             out_nx = -edge_dy / edge_len
             out_ny = edge_dx / edge_len
             
+        # Inward unit normal (INSIDE polygon)
         in_nx = -out_nx
         in_ny = -out_ny
         
+        # Length offset: positioned INSIDE the shape
         len_offset = min(max(span_x, span_y) * 0.042, max(edge_len * 0.22, 2.0))
         len_x = mid_x + in_nx * len_offset
         len_y = mid_y + in_ny * len_offset
         
+        # Get length string
         length_m = None
         if edited_segments and i < len(edited_segments):
             try:
@@ -218,13 +222,14 @@ def render_cad_croquis(vertices, boundaries=None, output_image_path=None,
             length_m = edge_len
             
         len_str = f"{length_m:.2f}م"
-        reshaped_len_str = format_arabic_text(len_str)
         
-        ax.text(len_x, len_y, reshaped_len_str,
+        # Draw red length label aligned with segment INSIDE the polygon
+        ax.text(len_x, len_y, len_str,
                 color='#D32F2F', fontsize=12, fontweight='bold',
-                rotation=angle_deg, rotation_mode='anchor',
+                fontfamily='Arial', rotation=angle_deg, rotation_mode='anchor',
                 ha='center', va='center', zorder=5)
         
+        # Check if this edge has a neighbor description (only drawn if provided by user)
         side = None
         if edited_segments and i < len(edited_segments):
             side = edited_segments[i].get("direction")
@@ -244,24 +249,27 @@ def render_cad_croquis(vertices, boundaries=None, output_image_path=None,
             neigh_x = mid_x + out_nx * neigh_offset
             neigh_y = mid_y + out_ny * neigh_offset
             
-            reshaped_neighbor = format_arabic_text(neighbor_text)
-            ax.text(neigh_x, neigh_y, reshaped_neighbor,
+            # Draw blue neighbor text aligned with segment OUTSIDE the polygon
+            ax.text(neigh_x, neigh_y, str(neighbor_text).strip(),
                     color='#0284C7', fontsize=13, fontweight='bold',
-                    rotation=angle_deg, rotation_mode='anchor',
+                    fontfamily='Arial', rotation=angle_deg, rotation_mode='anchor',
                     ha='center', va='center', zorder=5)
         
-    # 4. Semi-Transparent Compass Rose / North Arrow
+    # 4. Add Semi-Transparent Compass Rose / North Arrow at Upper-Left corner
     ax.annotate(
         '', xy=(0.06, 0.94), xytext=(0.06, 0.81), xycoords='axes fraction',
         arrowprops=dict(facecolor='black', edgecolor='black', width=2.8, headwidth=9.5, headlength=10.5, alpha=0.35),
         zorder=6
     )
     ax.text(0.06, 0.96, 'N', transform=ax.transAxes,
-            color='black', fontsize=13, fontweight='bold', ha='center', va='bottom', alpha=0.45, zorder=6)
+            color='black', fontsize=13, fontweight='bold', fontfamily='Arial', ha='center', va='bottom', alpha=0.45, zorder=6)
     
+    # Set view limits with uniform aspect ratio
     ax.set_xlim(min_x - pad_x, max_x + pad_x)
     ax.set_ylim(min_y - pad_y, max_y + pad_y)
     ax.set_aspect('equal', adjustable='datalim')
+    
+    # Hide all frame borders and axes
     ax.axis('off')
     plt.tight_layout(pad=0.06)
     
@@ -277,3 +285,10 @@ def render_cad_croquis(vertices, boundaries=None, output_image_path=None,
         plt.savefig(buf, format='png', dpi=300, bbox_inches='tight', facecolor='white', pad_inches=0.03)
         plt.close(fig)
         return buf.getvalue()
+
+def generate_croquis_image(parcel, output_path):
+    """Direct alias matching project_dudc interface"""
+    verts = parcel.get("vertices", [])
+    bounds = parcel.get("boundaries", {})
+    segs = parcel.get("segments", [])
+    return render_cad_croquis(verts, boundaries=bounds, output_image_path=output_path, edited_segments=segs)
