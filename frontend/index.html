@@ -537,49 +537,6 @@
     }
 
     /* Modal for API settings */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(6px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 16px;
-    }
-
-    .modal-box {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-      max-width: 480px;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .modal-title {
-      font-size: 1.15rem;
-      font-weight: 800;
-    }
-
-    .modal-close {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 1.4rem;
-      cursor: pointer;
-    }
 
     /* Toast */
     .toast {
@@ -620,12 +577,9 @@
         </div>
       </div>
       <div class="header-actions">
-        <div class="badge-cloud" id="serverStatusBadge" onclick="openApiSettings()" title="اضغط لتغيير رابط الخادم السحابي">
+        <div class="badge-cloud" id="serverStatusBadge">
           <span id="serverStatusText">جارِ التحقق من السيرفر...</span>
         </div>
-        <button class="btn-icon-setting" onclick="openApiSettings()">
-          ⚙ إعدادات الـ API
-        </button>
       </div>
     </header>
 
@@ -843,28 +797,6 @@
 
   </div>
 
-  <!-- API Settings Modal -->
-  <div class="modal-overlay" id="apiModal">
-    <div class="modal-box">
-      <div class="modal-header">
-        <h3 class="modal-title">⚙ إعدادات خادم المعالجة (API Backend)</h3>
-        <button class="modal-close" onclick="closeApiSettings()">✕</button>
-      </div>
-      <p style="font-size: 0.86rem; color: var(--text-muted);">
-        يمكنك التبديل بين خادم Modal السحابي أو السيرفر المحلي أثناء التطوير:
-      </p>
-      <div>
-        <label style="font-size: 0.82rem; font-weight: 700; color: #cbd5e1; display: block; margin-bottom: 6px;">
-          رابط الـ API Base URL:
-        </label>
-        <input type="text" id="apiBaseUrlInput" placeholder="https://username--spv-cert-suite.modal.run أو http://localhost:8000">
-      </div>
-      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px;">
-        <button class="btn btn-outline" onclick="testApiConnection()">🔍 فحص الاتصال</button>
-        <button class="btn btn-primary" onclick="saveApiSettings()">حفظ واعتماد</button>
-      </div>
-    </div>
-  </div>
 
   <!-- Toast -->
   <div class="toast" id="toastMsg"></div>
@@ -878,12 +810,10 @@
     let croquisDebounceTimer = null;
 
     // API Config
-    const DEFAULT_MODAL_API = "https://killd00zer--spv-cert-suite-modal-asgi.modal.run";
-    let apiBaseUrl = localStorage.getItem("spv_api_base_url") || DEFAULT_MODAL_API;
+    const apiBaseUrl = "https://killd00zer--spv-cert-suite-modal-asgi.modal.run";
 
     function getApiUrl(endpoint) {
-      const base = apiBaseUrl.trim() ? apiBaseUrl.trim().replace(/\/+$/, '') : "";
-      return base + endpoint;
+      return apiBaseUrl + endpoint;
     }
 
     // Init & Health Check
@@ -899,8 +829,7 @@
       try {
         const res = await fetch(getApiUrl("/api/health"), { method: "GET" });
         if (res.ok) {
-          const data = await res.json();
-          text.textContent = apiBaseUrl.includes("modal.run") ? "متصل (Modal Cloud ☁)" : "متصل بالخادم ✔";
+          text.textContent = "الخادم السحابي متصل ✔";
           badge.style.borderColor = "rgba(16, 185, 129, 0.4)";
           badge.style.background = "rgba(16, 185, 129, 0.12)";
           badge.style.color = "#34d399";
@@ -908,7 +837,7 @@
           throw new Error("HTTP " + res.status);
         }
       } catch (err) {
-        text.textContent = "غير متصل بالسيرفر ⚠";
+        text.textContent = "الخادم متوقف حالياً ⏸";
         badge.style.borderColor = "rgba(239, 68, 68, 0.4)";
         badge.style.background = "rgba(239, 68, 68, 0.12)";
         badge.style.color = "#f87171";
@@ -1297,38 +1226,6 @@
       }
     }
 
-    // Modal Settings
-    function openApiSettings() {
-      document.getElementById("apiBaseUrlInput").value = apiBaseUrl;
-      document.getElementById("apiModal").style.display = "flex";
-    }
-
-    function closeApiSettings() {
-      document.getElementById("apiModal").style.display = "none";
-    }
-
-    async function testApiConnection() {
-      const url = document.getElementById("apiBaseUrlInput").value.trim().replace(/\/+$/, '');
-      try {
-        const res = await fetch(url + "/api/health");
-        if (res.ok) {
-          alert("✔ الاتصال بالسيرفر ناجح تماماً!");
-        } else {
-          alert("⚠ استجاب السيرفر بكود: " + res.status);
-        }
-      } catch (e) {
-        alert("❌ تعذر الاتصال بالسيرفر: " + e.message);
-      }
-    }
-
-    function saveApiSettings() {
-      const url = document.getElementById("apiBaseUrlInput").value.trim();
-      apiBaseUrl = url;
-      localStorage.setItem("spv_api_base_url", url);
-      closeApiSettings();
-      checkServerHealth();
-      showToast("✔ تم حفظ إعدادات الـ API بنجاح");
-    }
 
     function showToast(msg) {
       const t = document.getElementById("toastMsg");
