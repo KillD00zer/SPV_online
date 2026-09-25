@@ -1,0 +1,39 @@
+﻿# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+venv/
+.venv/
+env/
+
+# Build & Cache
+dist/
+build/
+.cache/
+
+# Environment files
+.env
+.env.local
+*.local
+
+# Cadastral confidential data
+*.docx
+*.csv
+output test/
+test_owner_folders/
+cert_app/temp_assets/
+
+# System & Editor
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+.vscode/
+.idea/
