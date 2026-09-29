@@ -68,7 +68,7 @@ SPV_online/
 ### 2. استضافة الواجهة على Vercel:
 1. توجه إلى [vercel.com](https://vercel.com) واضغط **Add New > Project**.
 2. اختر مستودع الـ GitHub الخاص بك.
-3. في خانة **Root Directory**: اختر مجلد `SPV_online/frontend`.
+3. في خانة **Root Directory**: اختر مجلد `frontend` (وليس `SPV_online/frontend`).
 4. اضغط **Deploy**!
 5. بعد انتهاء النشر (أقل من دقيقة):
    - افتح رابط موقعك على Vercel.
