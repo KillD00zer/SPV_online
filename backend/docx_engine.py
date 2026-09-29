@@ -93,7 +93,7 @@ def create_certificate_docx(land_data, areas_list, boundaries_dict, output_targe
     table = doc.tables[0]
 
     # --- 1. Populate Metadata (Rows 1..6) ---
-    name = land_data.get('name', '')
+    name = str(land_data.get('name', '')).strip()
     
     # Parcel ID
     parcel_ids = []
@@ -102,7 +102,7 @@ def create_certificate_docx(land_data, areas_list, boundaries_dict, output_targe
             pid = str(a.get('parcel_id', '')).strip()
             if pid and pid not in parcel_ids:
                 parcel_ids.append(pid)
-    parcel_str = ", ".join(parcel_ids) if parcel_ids else str(land_data.get('parcel_id', ''))
+    parcel_str = ", ".join(parcel_ids) if parcel_ids else str(land_data.get('parcel_id', '')).strip()
 
     # Hod Name
     hod_names = []
@@ -111,12 +111,16 @@ def create_certificate_docx(land_data, areas_list, boundaries_dict, output_targe
             hname = str(a.get('hod_name', '')).strip()
             if hname and hname not in hod_names:
                 hod_names.append(hname)
-    hod_str = " - ".join(hod_names) if hod_names else str(land_data.get('hod_name', ''))
+    hod_str = " - ".join(hod_names) if hod_names else str(land_data.get('hod_name', '')).strip()
 
-    id_no = str(land_data.get('id_no', ''))
-    req_date = str(land_data.get('data inter', land_data.get('date', ''))) or '2026/09/14'
-    center = str(land_data.get('Center', ''))
-    village = str(land_data.get('Sheikhah', ''))
+    id_no = str(land_data.get('id_no', '')).strip()
+    
+    # Inherit date from Data_Int or other date variations
+    raw_date = land_data.get('Data_Int', land_data.get('data_int', land_data.get('Data_int', land_data.get('Data_Inter', land_data.get('data inter', land_data.get('date', land_data.get('Date', land_data.get('تاريخ تقديم الطلب', ''))))))))
+    req_date = str(raw_date).strip() if raw_date else ""
+    
+    center = str(land_data.get('Center', land_data.get('center', ''))).strip()
+    village = str(land_data.get('Sheikhah', land_data.get('village', ''))).strip()
     
     # Map IDs
     map_ids = []
@@ -125,16 +129,18 @@ def create_certificate_docx(land_data, areas_list, boundaries_dict, output_targe
             mid = str(a.get('map_id', '')).strip()
             if mid and mid not in map_ids:
                 map_ids.append(mid)
-    map_id_str = ", ".join(map_ids) if map_ids else str(land_data.get('map_id', ''))
-    map_id2_str = str(land_data.get('map_id2', ''))
+    map_id_str = ", ".join(map_ids) if map_ids else str(land_data.get('map_id', '')).strip()
+    map_id2_str = str(land_data.get('map_id2', '')).strip()
 
     # Area
     area_val = land_data.get('area', '')
     unit_val = land_data.get('unit', 'م2')
     area_str = f"{area_val} {unit_val}".strip() if area_val else "-"
 
-    # Address
+    # Address / Place / Activity
     address = str(land_data.get('place', land_data.get('address', ''))).strip()
+    if not address and land_data.get('activity'):
+        address = str(land_data.get('activity')).strip()
 
     # Apply Metadata to Template Cells
     set_cell_text(table.rows[1].cells[1], name, bold=True, font_size=11, align=WD_ALIGN_PARAGRAPH.RIGHT)
@@ -310,6 +316,48 @@ def create_certificate_docx(land_data, areas_list, boundaries_dict, output_targe
         p_s.paragraph_format.space_before = Pt(2)
         p_s.paragraph_format.space_after = Pt(2)
         p_s.add_run().add_picture(sat_target, width=Inches(3.95))
+
+    # --- 4. Populate Notes Row (Row 11) ---
+    notes_val = str(land_data.get('notes', land_data.get('Notes', land_data.get('ملاحظات', land_data.get('note', land_data.get('Note', '')))))).strip()
+    if len(table.rows) >= 12:
+        c_notes = table.rows[11].cells[2]
+        set_cell_text(c_notes, notes_val, bold=False, font_size=9.5, font_name="Arial", align=WD_ALIGN_PARAGRAPH.RIGHT)
+    elif len(table.rows) == 11:
+        new_tr = parse_xml(f'''
+        <w:tr {nsdecls("w")}>
+          <w:trPr><w:trHeight w:val="450"/></w:trPr>
+          <w:tc>
+            <w:tcPr>
+              <w:tcW w:w="1600" w:type="dxa"/>
+              <w:gridSpan w:val="2"/>
+              <w:tcBorders>
+                <w:top w:val="single" w:sz="8" w:space="0" w:color="4F81BD"/>
+                <w:left w:val="single" w:sz="8" w:space="0" w:color="4F81BD"/>
+                <w:bottom w:val="single" w:sz="8" w:space="0" w:color="4F81BD"/>
+                <w:right w:val="single" w:sz="8" w:space="0" w:color="4F81BD"/>
+              </w:tcBorders>
+              <w:shd w:val="clear" w:color="auto" w:fill="D3DFEE"/>
+            </w:tcPr>
+            <w:p><w:pPr><w:jc w:val="center"/><w:bidi/></w:pPr><w:r><w:rPr><w:rFonts w:cs="Arial"/><w:b/><w:bCs/><w:sz w:val="20"/><w:rtl/></w:rPr><w:t>ملاحظات</w:t></w:r></w:p>
+          </w:tc>
+          <w:tc>
+            <w:tcPr>
+              <w:tcW w:w="9568" w:type="dxa"/>
+              <w:gridSpan w:val="6"/>
+              <w:tcBorders>
+                <w:top w:val="single" w:sz="8" w:space="0" w:color="4F81BD"/>
+                <w:left w:val="single" w:sz="8" w:space="0" w:color="4F81BD"/>
+                <w:bottom w:val="single" w:sz="8" w:space="0" w:color="4F81BD"/>
+                <w:right w:val="single" w:sz="8" w:space="0" w:color="4F81BD"/>
+              </w:tcBorders>
+              <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            </w:tcPr>
+            <w:p><w:pPr><w:jc w:val="right"/><w:bidi/></w:pPr><w:r><w:rPr><w:rFonts w:cs="Arial"/><w:sz w:val="19"/><w:rtl/></w:rPr><w:t></w:t></w:r></w:p>
+          </w:tc>
+        </w:tr>
+        ''')
+        table._tbl.append(new_tr)
+        set_cell_text(table.rows[11].cells[2], notes_val, bold=False, font_size=9.5, font_name="Arial", align=WD_ALIGN_PARAGRAPH.RIGHT)
 
     if output_target:
         if isinstance(output_target, str):

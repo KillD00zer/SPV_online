@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root {
       --bg: #090d16;
@@ -30,6 +31,54 @@
       --danger-bg: rgba(239, 68, 68, 0.12);
       --radius: 14px;
       --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .seg-neighbor-hint {
+      font-size: 0.74rem;
+      color: #38bdf8;
+      margin-top: 3px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 170px;
+    }
+    .meta-val-input {
+      background: rgba(15, 23, 42, 0.7) !important;
+      border: 1px solid rgba(59, 130, 246, 0.4) !important;
+      border-radius: 6px !important;
+      color: #38bdf8 !important;
+      font-family: inherit !important;
+      font-size: 0.92rem !important;
+      font-weight: 700 !important;
+      padding: 3px 8px !important;
+      width: 100% !important;
+      text-align: center !important;
+      transition: var(--transition);
+    }
+    .meta-val-input:focus {
+      outline: none !important;
+      border-color: #38bdf8 !important;
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25) !important;
+    }
+    .notes-textarea {
+      width: 100%;
+      background: #0b1120;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #f8fafc;
+      font-family: inherit;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      resize: vertical;
+      min-height: 75px;
+      transition: var(--transition);
+    }
+    .notes-textarea:focus {
+      outline: none;
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--primary-glow);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -586,10 +635,10 @@
     <!-- Upload Card -->
     <section class="card dropzone-wrap">
       <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
-        <input type="file" id="fileInput" multiple accept=".csv" style="display: none;" onchange="handleFileSelect(event)">
+        <input type="file" id="fileInput" multiple accept=".csv,.xlsx,.xls" style="display: none;" onchange="handleFileSelect(event)">
         <div class="dropzone-icon">📁</div>
-        <div class="dropzone-title">اسحب وأفلت ملفات الرفع المساحي هنا (Land & Areas CSV)</div>
-        <div class="dropzone-desc">قم بإسقاط ملف إحداثيات الأركان (Land_*.csv) وملف تقاطع الأحواض (Areas_*.csv) أو اضغط لاختيارهما معاً.</div>
+        <div class="dropzone-title">اسحب وأفلت ملفات الرفع المساحي هنا (Land & Areas CSV / Excel)</div>
+        <div class="dropzone-desc">قم بإسقاط ملف إحداثيات الأركان (Land_*.csv / .xlsx) وملف تقاطع الأحواض (Areas_*.csv / .xlsx) أو اضغط لاختيارهما معاً.</div>
         <div class="dropzone-buttons" onclick="event.stopPropagation()">
           <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
             📤 اختيار الملفات من الجهاز
@@ -634,6 +683,14 @@
             <span class="meta-val" id="valIdNo">-</span>
           </div>
           <div class="meta-item">
+            <span class="meta-label">📅 تاريخ تقديم الطلب</span>
+            <input type="text" id="valDate" class="meta-val-input" placeholder="YYYY/MM/DD">
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">🆔 الرقم القومي</span>
+            <span class="meta-val" id="valAnational">-</span>
+          </div>
+          <div class="meta-item">
             <span class="meta-label">المركز</span>
             <span class="meta-val" id="valCenter">-</span>
           </div>
@@ -662,8 +719,16 @@
             <span class="meta-val" id="valCalcArea" style="color: #38bdf8;">-</span>
           </div>
           <div class="meta-item">
-            <span class="meta-label">عدد أركان المضلع</span>
-            <span class="meta-val" id="valPoints">-</span>
+            <span class="meta-label">🏗️ وصف التعدي / النشاط</span>
+            <span class="meta-val" id="valActivity">-</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">📍 وصف الموقع</span>
+            <input type="text" id="valPlace" class="meta-val-input" placeholder="وصف الموقع (موروث من الإكسيل أو مخصص)...">
+          </div>
+          <div class="meta-item" style="grid-column: 1 / -1;">
+            <span class="meta-label">📝 ملاحظات الشهادة (توريث تلقائي / تعديل مخصص)</span>
+            <input type="text" id="valNotes" class="meta-val-input" placeholder="الملاحظات الموروثة من الإكسيل أو كتابة ملاحظات مخصصة..." oninput="syncNotes('valNotes')">
           </div>
         </div>
       </section>
@@ -674,19 +739,19 @@
         <div class="bounds-grid">
           <div class="bound-field">
             <label>🌊 الحد البحري <span id="lenNorth">0.00 م</span></label>
-            <input type="text" id="inNorth" placeholder="وصف الحد والجار (اختياري)..." oninput="debounceCroquisUpdate()">
+            <input type="text" id="inNorth" placeholder="وصف الحد والجار (موروث من الإكسيل أو مخصص)..." oninput="onBoundaryNeighborInput()">
           </div>
           <div class="bound-field">
             <label>🌅 الحد الشرقي <span id="lenEast">0.00 م</span></label>
-            <input type="text" id="inEast" placeholder="وصف الحد والجار (اختياري)..." oninput="debounceCroquisUpdate()">
+            <input type="text" id="inEast" placeholder="وصف الحد والجار (موروث من الإكسيل أو مخصص)..." oninput="onBoundaryNeighborInput()">
           </div>
           <div class="bound-field">
             <label>☀️ الحد القبلي <span id="lenSouth">0.00 م</span></label>
-            <input type="text" id="inSouth" placeholder="وصف الحد والجار (اختياري)..." oninput="debounceCroquisUpdate()">
+            <input type="text" id="inSouth" placeholder="وصف الحد والجار (موروث من الإكسيل أو مخصص)..." oninput="onBoundaryNeighborInput()">
           </div>
           <div class="bound-field">
             <label>🌇 الحد الغربي <span id="lenWest">0.00 م</span></label>
-            <input type="text" id="inWest" placeholder="وصف الحد والجار (اختياري)..." oninput="debounceCroquisUpdate()">
+            <input type="text" id="inWest" placeholder="وصف الحد والجار (موروث من الإكسيل أو مخصص)..." oninput="onBoundaryNeighborInput()">
           </div>
         </div>
 
@@ -780,6 +845,17 @@
         </div>
       </section>
 
+      <!-- Notes Section -->
+      <section class="card">
+        <h2 class="section-title">📝 ملاحظات الشهادة</h2>
+        <div style="margin-top: 10px;">
+          <textarea id="inNotes" rows="3" class="notes-textarea" placeholder="الملاحظات الموروثة من ملف الإكسيل أو كتابة ملاحظات مخصصة..."></textarea>
+          <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 6px;">
+            💡 يتم إدراج هذه الملاحظات في أسفل شهادة الرفع المساحي الرسمية (DOCX) بعد حقل الصور مباشرة.
+          </div>
+        </div>
+      </section>
+
       <!-- Action Footer -->
       <div class="action-bar">
         <div>
@@ -809,8 +885,22 @@
     let customSatelliteBase64 = null;
     let croquisDebounceTimer = null;
 
-    // API Config
-    const apiBaseUrl = "https://killd00zer--spv-cert-suite-modal-asgi.modal.run";
+    // Synchronize notes between metadata grid and bottom textarea
+    function syncNotes(sourceId) {
+      if (sourceId === "valNotes") {
+        const val = document.getElementById("valNotes").value;
+        const el = document.getElementById("inNotes");
+        if (el) el.value = val;
+      } else if (sourceId === "inNotes") {
+        const val = document.getElementById("inNotes").value;
+        const el = document.getElementById("valNotes");
+        if (el) el.value = val;
+      }
+    }
+
+    // API Config (Auto-detect localhost if running local dev server)
+    const isLocalHost = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+    const apiBaseUrl = isLocalHost ? "http://localhost:8000" : "https://killd00zer--spv-cert-suite-modal-asgi.modal.run";
 
     function getApiUrl(endpoint) {
       return apiBaseUrl + endpoint;
@@ -871,28 +961,52 @@
       let areasFile = files.find(f => f.name.toLowerCase().startsWith("areas_") || f.name.toLowerCase().includes("areas"));
 
       if (!landFile) {
-        // Fallback: take first csv as land file
-        landFile = files.find(f => f.name.toLowerCase().endsWith(".csv"));
+        // Fallback: take first csv or excel file as land file
+        landFile = files.find(f => {
+          const n = f.name.toLowerCase();
+          return n.endsWith(".csv") || n.endsWith(".xlsx") || n.endsWith(".xls");
+        });
       }
 
       if (!landFile) {
-        alert("يرجى اختيار ملف CSV يحتوي على أركان وإحداثيات الأرض (Land_*.csv)");
+        alert("يرجى اختيار ملف CSV أو Excel يحتوي على أركان وإحداثيات الأرض (Land_*.csv / .xlsx)");
         return;
       }
 
-      const landContent = await readFileAsText(landFile);
-      const areasContent = areasFile ? await readFileAsText(areasFile) : "";
+      const landContent = await readFileContentAsCsv(landFile);
+      const areasContent = areasFile ? await readFileContentAsCsv(areasFile) : "";
 
       await processCsvUpload(landContent, areasContent, landFile.name);
     }
 
-    function readFileAsText(file) {
-      return new Promise((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = e => resolve(e.target.result);
-        r.onerror = reject;
-        r.readAsText(file, "utf-8");
-      });
+    function readFileContentAsCsv(file) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      if ((ext === 'xlsx' || ext === 'xls') && typeof XLSX !== 'undefined') {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            try {
+              const data = new Uint8Array(e.target.result);
+              const workbook = XLSX.read(data, { type: 'array' });
+              const firstSheetName = workbook.SheetNames[0];
+              const worksheet = workbook.Sheets[firstSheetName];
+              const csvText = XLSX.utils.sheet_to_csv(worksheet);
+              resolve(csvText);
+            } catch (err) {
+              reject(err);
+            }
+          };
+          reader.onerror = reject;
+          reader.readAsArrayBuffer(file);
+        });
+      } else {
+        return new Promise((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = e => resolve(e.target.result);
+          r.onerror = reject;
+          r.readAsText(file, "utf-8");
+        });
+      }
     }
 
     async function processCsvUpload(landText, areasText, displayName) {
@@ -916,7 +1030,7 @@
         document.getElementById("loadedFileName").textContent = displayName;
         document.getElementById("loadedBar").style.display = "flex";
         renderCaseWorkspace();
-        showToast("✔ تم تحليل البيانات بنجاح!");
+        showToast("✔ تم تحليل البيانات وتوريث الحقول بنجاح!");
       } catch (err) {
         alert("خطأ أثناء تحليل ملف الـ CSV: " + err.message);
       }
@@ -924,17 +1038,17 @@
 
     // Demo Sample Case
     function loadSampleCase() {
-      const sampleLand = `POINT_NUM,POINT_X,POINT_Y,ORIG_FID,name,id_no,Center,Sheikhah,place,area,unit
-1,31.25000000,30.05000000,1,محمد أحمد علي حسن,101,مركز طنطا,كفر الشيخ سليم,ناحية داير الناحية,500.00,م2
-2,31.25020740,30.05000000,1,محمد أحمد علي حسن,101,مركز طنطا,كفر الشيخ سليم,ناحية داير الناحية,500.00,م2
-3,31.25020740,30.05022550,1,محمد أحمد علي حسن,101,مركز طنطا,كفر الشيخ سليم,ناحية داير الناحية,500.00,م2
-4,31.25000000,30.05022550,1,محمد أحمد علي حسن,101,مركز طنطا,كفر الشيخ سليم,ناحية داير الناحية,500.00,م2
-5,31.25000000,30.05000000,1,محمد أحمد علي حسن,101,مركز طنطا,كفر الشيخ سليم,ناحية داير الناحية,500.00,م2`;
+      const sampleLand = `POINT_NUM,POINT_X,POINT_Y,ORIG_FID,name,id_no,Center,Sheikhah,place,area,unit,Data_Int,Anational,activity,north,east,south,west,notes
+1,31.25000000,30.05000000,1,محمد أحمد علي حسن,101,مركز طنطا,كفر الشيخ سليم,ناحية داير الناحية,500.00,م2,2026/09/29,28603011209698,مبانى,شارع بعرض 8 متر,جار قائم حكمت عبداللطيف,ملك ورثة علي محمود,طريق رئيسي,تمت المعاينة ومطابقة الحدود
+2,31.25020740,30.05000000,1,محمد أحمد علي حسن,101,مركز طنطا,كفر الشيخ سليم,ناحية داير الناحية,500.00,م2,2026/09/29,28603011209698,مبانى,شارع بعرض 8 متر,جار قائم حكمت عبداللطيف,ملك ورثة علي محمود,طريق رئيسي,تمت المعاينة ومطابقة الحدود
+3,31.25020740,30.05022550,1,محمد أحمد علي حسن,101,مركز طنطا,كفر الشيخ سليم,ناحية داير الناحية,500.00,م2,2026/09/29,28603011209698,مبانى,شارع بعرض 8 متر,جار قائم حكمت عبداللطيف,ملك ورثة علي محمود,طريق رئيسي,تمت المعاينة ومطابقة الحدود
+4,31.25000000,30.05022550,1,محمد أحمد علي حسن,101,مركز طنطا,كفر الشيخ سليم,ناحية داير الناحية,500.00,م2,2026/09/29,28603011209698,مبانى,شارع بعرض 8 متر,جار قائم حكمت عبداللطيف,ملك ورثة علي محمود,طريق رئيسي,تمت المعاينة ومطابقة الحدود
+5,31.25000000,30.05000000,1,محمد أحمد علي حسن,101,مركز طنطا,كفر الشيخ سليم,ناحية داير الناحية,500.00,م2,2026/09/29,28603011209698,مبانى,شارع بعرض 8 متر,جار قائم حكمت عبداللطيف,ملك ورثة علي محمود,طريق رئيسي,تمت المعاينة ومطابقة الحدود`;
 
       const sampleAreas = `hod_name,parcel_id,map_id,overlap_area_m2
 حوض النجيل القبلي نمرة 4,15,89/640,500.00`;
 
-      processCsvUpload(sampleLand, sampleAreas, "Land_101_محمد_احمد.csv (نموذج اختباري)");
+      processCsvUpload(sampleLand, sampleAreas, "Land_101_محمد_احمد.csv (نموذج اختباري شامل)");
     }
 
     function resetLoadedData() {
@@ -942,6 +1056,10 @@
       document.getElementById("mainWorkspace").style.display = "none";
       document.getElementById("loadedBar").style.display = "none";
       document.getElementById("fileInput").value = "";
+      if (document.getElementById("valPlace")) document.getElementById("valPlace").value = "";
+      if (document.getElementById("valNotes")) document.getElementById("valNotes").value = "";
+      if (document.getElementById("inNotes")) document.getElementById("inNotes").value = "";
+      if (document.getElementById("valDate")) document.getElementById("valDate").value = "";
     }
 
     // Render Case Data
@@ -951,9 +1069,11 @@
 
       document.getElementById("mainWorkspace").style.display = "flex";
 
-      // Metadata
+      // Metadata Population
       document.getElementById("valName").textContent = m.name || "-";
       document.getElementById("valIdNo").textContent = m.id_no || "-";
+      document.getElementById("valDate").value = m.Data_Int || "";
+      document.getElementById("valAnational").textContent = m.Anational || "-";
       document.getElementById("valCenter").textContent = m.Center || "-";
       document.getElementById("valSheikhah").textContent = m.Sheikhah || "-";
       document.getElementById("valHod").textContent = m.hod_name || "-";
@@ -961,7 +1081,11 @@
       document.getElementById("valMapId").textContent = m.map_id || "-";
       document.getElementById("valStatedArea").textContent = `${d.stated_area} ${m.unit || 'م2'}`;
       document.getElementById("valCalcArea").textContent = `${d.calculated_area} م2`;
-      document.getElementById("valPoints").textContent = `${d.vertices.length} نقاط أركان`;
+      document.getElementById("valActivity").textContent = m.activity || "-";
+
+      // Inherit place / site description
+      const placeVal = m.place || m.activity || m.address || m["وصف الموقع"] || m["وصف التعدي"] || "";
+      if (document.getElementById("valPlace")) document.getElementById("valPlace").value = placeVal;
 
       // Area tolerance banner
       const banner = document.getElementById("areaBanner");
@@ -978,13 +1102,19 @@
         bDiff.textContent = `Δ = ${d.area_difference} m² (تجاوز)`;
       }
 
-      // Clean boundary neighbors by default (empty unless user specifies)
-      document.getElementById("inNorth").value = "";
-      document.getElementById("inEast").value = "";
-      document.getElementById("inSouth").value = "";
-      document.getElementById("inWest").value = "";
+      // Inherit boundary neighbors from metadata
+      document.getElementById("inNorth").value = m.north || m["الحد البحري"] || "";
+      document.getElementById("inEast").value = m.east || m["الحد الشرقي"] || "";
+      document.getElementById("inSouth").value = m.south || m["الحد القبلي"] || "";
+      document.getElementById("inWest").value = m.west || m["الحد الغربي"] || "";
+
+      // Inherit notes into both metadata input and bottom textarea
+      const noteVal = m.notes || m.Notes || m["ملاحظات"] || "";
+      if (document.getElementById("valNotes")) document.getElementById("valNotes").value = noteVal;
+      if (document.getElementById("inNotes")) document.getElementById("inNotes").value = noteVal;
 
       renderSegmentsTable(d.segments);
+      updateNeighborHints();
       loadSatellitePreview();
       updateCadCroquis();
     }
@@ -1017,6 +1147,7 @@
               <option value="south" ${dir === 'south' ? 'selected' : ''}>☀️ الحد القبلي</option>
               <option value="west" ${dir === 'west' ? 'selected' : ''}>🌇 الحد الغربي</option>
             </select>
+            <div id="seg_hint_${idx}" class="seg-neighbor-hint"></div>
           </td>
           <td><span class="badge-calc-len">${calcLen} م</span></td>
           <td>
@@ -1027,11 +1158,38 @@
       });
 
       updateDirectionSums();
+      updateNeighborHints();
     }
 
     function onSegmentChange() {
       updateDirectionSums();
+      updateNeighborHints();
       debounceCroquisUpdate();
+    }
+
+    function onBoundaryNeighborInput() {
+      updateNeighborHints();
+      debounceCroquisUpdate();
+    }
+
+    function updateNeighborHints() {
+      const hints = {
+        north: (document.getElementById("inNorth") ? document.getElementById("inNorth").value.trim() : ""),
+        east: (document.getElementById("inEast") ? document.getElementById("inEast").value.trim() : ""),
+        south: (document.getElementById("inSouth") ? document.getElementById("inSouth").value.trim() : ""),
+        west: (document.getElementById("inWest") ? document.getElementById("inWest").value.trim() : "")
+      };
+
+      if (originalSegments && originalSegments.length > 0) {
+        for (let i = 0; i < originalSegments.length; i++) {
+          const sel = document.getElementById(`seg_dir_${i}`);
+          const hintEl = document.getElementById(`seg_hint_${i}`);
+          if (sel && hintEl) {
+            const val = hints[sel.value] || "";
+            hintEl.textContent = val ? "الجار الموروث: " + val : "";
+          }
+        }
+      }
     }
 
     function updateDirectionSums() {
@@ -1174,8 +1332,16 @@
         west: document.getElementById("inWest").value.trim()
       };
 
+      const dateInp = document.getElementById("valDate");
+      const placeInp = document.getElementById("valPlace");
+      const notesInp = document.getElementById("valNotes") || document.getElementById("inNotes");
+
       const landPayload = {
         ...currentCaseData.metadata,
+        Data_Int: dateInp ? dateInp.value.trim() : (currentCaseData.metadata.Data_Int || ""),
+        place: placeInp ? placeInp.value.trim() : (currentCaseData.metadata.place || currentCaseData.metadata.activity || ""),
+        address: placeInp ? placeInp.value.trim() : (currentCaseData.metadata.address || currentCaseData.metadata.place || ""),
+        notes: notesInp ? notesInp.value.trim() : (currentCaseData.metadata.notes || ""),
         calc_area: currentCaseData.calculated_area,
         vertices: currentCaseData.vertices
       };

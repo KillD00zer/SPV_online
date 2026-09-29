@@ -209,14 +209,47 @@ def parse_csv_data(payload: Dict[str, Any] = Body(...)):
     
     reader = csv.DictReader(io.StringIO(land_content))
     for row in reader:
-        if not metadata:
-            metadata = {k: v for k, v in row.items() if k not in ["POINT_NUM", "POINT_X", "POINT_Y", "ORIG_FID"]}
+        clean_row = {}
+        for k, v in row.items():
+            if not k:
+                continue
+            clean_k = k.strip().lstrip('\ufeff')
+            clean_v = v.strip() if isinstance(v, str) else v
+            clean_row[clean_k] = clean_v
+            
+        for k, v in clean_row.items():
+            if k not in ["POINT_NUM", "POINT_X", "POINT_Y", "ORIG_FID", "Shape_Length", "Shape_Area"]:
+                if v and (k not in metadata or not metadata[k]):
+                    metadata[k] = v
+                    
         try:
-            px = float(row.get("POINT_X", 0))
-            py = float(row.get("POINT_Y", 0))
+            px = float(clean_row.get("POINT_X", 0))
+            py = float(clean_row.get("POINT_Y", 0))
             raw_vertices.append((px, py))
         except (ValueError, TypeError):
             continue
+
+    # Standardize inherited fields
+    date_val = metadata.get('Data_Int') or metadata.get('data_int') or metadata.get('Data_int') or metadata.get('Data_Inter') or metadata.get('data inter') or metadata.get('date') or metadata.get('Date') or metadata.get('تاريخ تقديم الطلب') or ''
+    if date_val:
+        metadata['Data_Int'] = date_val
+
+    notes_val = metadata.get('notes') or metadata.get('Notes') or metadata.get('ملاحظات') or metadata.get('note') or ''
+    if notes_val:
+        metadata['notes'] = notes_val
+
+    for dir_k, aliases in [('north', ['الحد البحري', 'بحري']), ('east', ['الحد الشرقي', 'شرقي']), ('south', ['الحد القبلي', 'قبلي']), ('west', ['الحد الغربي', 'غربي'])]:
+        if not metadata.get(dir_k):
+            for alias in aliases:
+                if metadata.get(alias):
+                    metadata[dir_k] = metadata[alias]
+                    break
+
+    # Standardize site description / place
+    place_val = metadata.get('place') or metadata.get('activity') or metadata.get('address') or metadata.get('وصف الموقع') or metadata.get('وصف التعدي') or ''
+    if place_val:
+        metadata['place'] = place_val
+        metadata['address'] = place_val
 
     if len(raw_vertices) < 3:
         raise HTTPException(status_code=400, detail="الملف لا يحتوي على 3 أركان على الأقل للأرض.")
