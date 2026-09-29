@@ -25,10 +25,14 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Install Modal CLI
+      - name: Install Dependencies and Modal CLI
         run: |
           python -m pip install --upgrade pip
-          pip install modal
+          if [ -f "SPV_online/backend/requirements.txt" ]; then
+            pip install -r SPV_online/backend/requirements.txt
+          else
+            pip install -r backend/requirements.txt
+          fi
 
       - name: Deploy to Modal
         env:
