@@ -137,10 +137,22 @@ def create_certificate_docx(land_data, areas_list, boundaries_dict, output_targe
     unit_val = land_data.get('unit', 'م2')
     area_str = f"{area_val} {unit_val}".strip() if area_val else "-"
 
-    # Address / Place / Activity
-    address = str(land_data.get('place', land_data.get('address', ''))).strip()
-    if not address and land_data.get('activity'):
-        address = str(land_data.get('activity')).strip()
+    # Infringement description (وصف التعدي - inherited primarily from activity)
+    infringement_desc = str(
+        land_data.get('activity') or 
+        land_data.get('وصف التعدي') or 
+        land_data.get('place') or 
+        land_data.get('address') or 
+        land_data.get('وصف الموقع') or 
+        ''
+    ).strip()
+
+    # Ensure label in row 6 says 'وصف التعدي' instead of 'وصف الموقع'
+    if 'وصف الموقع' in table.rows[6].cells[4].text:
+        for p in table.rows[6].cells[4].paragraphs:
+            for r in p.runs:
+                if 'وصف الموقع' in r.text:
+                    r.text = r.text.replace('وصف الموقع', 'وصف التعدي')
 
     # Apply Metadata to Template Cells
     set_cell_text(table.rows[1].cells[1], name, bold=True, font_size=11, align=WD_ALIGN_PARAGRAPH.RIGHT)
@@ -158,7 +170,7 @@ def create_certificate_docx(land_data, areas_list, boundaries_dict, output_targe
     set_cell_text(table.rows[5].cells[6], area_str, bold=True, font_size=11, align=WD_ALIGN_PARAGRAPH.CENTER)
 
     set_cell_text(table.rows[6].cells[1], map_id2_str, bold=True, font_size=11, align=WD_ALIGN_PARAGRAPH.CENTER)
-    set_cell_text(table.rows[6].cells[6], address, bold=True, font_size=10, align=WD_ALIGN_PARAGRAPH.RIGHT)
+    set_cell_text(table.rows[6].cells[6], infringement_desc, bold=True, font_size=10, align=WD_ALIGN_PARAGRAPH.RIGHT)
 
     # --- 2. Populate Container Row (Row 8) Side-by-Side Tables ---
     container_row = table.rows[8]

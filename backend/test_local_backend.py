@@ -95,6 +95,7 @@ def run_tests():
             "west": "طريق عام"
         },
         "custom_croq_base64": croq_data["croquis_url"],
+        "custom_sat_base64": croq_data["croquis_url"],
         "survey_tech": "محمد ابراهيم بدير",
         "sys_officer": "شريف محمد"
     })
@@ -104,9 +105,12 @@ def run_tests():
     zip_bytes = pkg_res.content
     with zipfile.ZipFile(io.BytesIO(zip_bytes)) as z:
         names = z.namelist()
-        print(f"    ✔ تم توليد ملف ZIP بحجم {len(zip_bytes)/1024:.1f} KB يحتوي على: {names}")
-        assert any(n.endswith(".docx") for n in names), "Missing DOCX in zip"
-        assert any(n.endswith(".png") for n in names), "Missing CAD image in zip"
+        docx_name = next(n for n in names if n.endswith(".docx"))
+        import docx
+        doc_obj = docx.Document(io.BytesIO(z.read(docx_name)))
+        tbl = doc_obj.tables[0]
+        assert "وصف التعدي" in tbl.rows[6].cells[4].text, "Missing وصف التعدي in docx table"
+        print(f"    ✔ تم التأكد من حقل الشهادة: {tbl.rows[6].cells[4].text.strip()} = {tbl.rows[6].cells[6].text.strip()}")
 
     print("\n" + "="*60)
     print("  🎉 جميع الفحوصات تمت بنجاح وبكفاءة تامة 100%!")

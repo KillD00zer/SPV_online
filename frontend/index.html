@@ -719,12 +719,8 @@
             <span class="meta-val" id="valCalcArea" style="color: #38bdf8;">-</span>
           </div>
           <div class="meta-item">
-            <span class="meta-label">🏗️ وصف التعدي / النشاط</span>
-            <span class="meta-val" id="valActivity">-</span>
-          </div>
-          <div class="meta-item">
-            <span class="meta-label">📍 وصف الموقع</span>
-            <input type="text" id="valPlace" class="meta-val-input" placeholder="وصف الموقع (موروث من الإكسيل أو مخصص)...">
+            <span class="meta-label">🏗️ وصف التعدي</span>
+            <input type="text" id="valActivity" class="meta-val-input" placeholder="وصف التعدي (موروث من activity في الإكسيل أو مخصص)...">
           </div>
           <div class="meta-item" style="grid-column: 1 / -1;">
             <span class="meta-label">📝 ملاحظات الشهادة (توريث تلقائي / تعديل مخصص)</span>
@@ -1056,6 +1052,7 @@
       document.getElementById("mainWorkspace").style.display = "none";
       document.getElementById("loadedBar").style.display = "none";
       document.getElementById("fileInput").value = "";
+      if (document.getElementById("valActivity")) document.getElementById("valActivity").value = "";
       if (document.getElementById("valPlace")) document.getElementById("valPlace").value = "";
       if (document.getElementById("valNotes")) document.getElementById("valNotes").value = "";
       if (document.getElementById("inNotes")) document.getElementById("inNotes").value = "";
@@ -1081,11 +1078,30 @@
       document.getElementById("valMapId").textContent = m.map_id || "-";
       document.getElementById("valStatedArea").textContent = `${d.stated_area} ${m.unit || 'م2'}`;
       document.getElementById("valCalcArea").textContent = `${d.calculated_area} م2`;
-      document.getElementById("valActivity").textContent = m.activity || "-";
 
-      // Inherit place / site description
-      const placeVal = m.place || m.activity || m.address || m["وصف الموقع"] || m["وصف التعدي"] || "";
-      if (document.getElementById("valPlace")) document.getElementById("valPlace").value = placeVal;
+      // Inherit infringement description (وصف التعدي موروث من activity في الإكسيل)
+      let activityVal = "";
+      for (const [k, v] of Object.entries(m)) {
+        if (!k || !v) continue;
+        const lk = k.trim().toLowerCase();
+        if (lk === "activity" || lk === "activity_desc" || lk === "infringement") {
+          activityVal = String(v).trim();
+          break;
+        }
+        if (k.trim() === "وصف التعدي" || k.trim() === "وصف_التعدي" || k.trim() === "النشاط") {
+          activityVal = String(v).trim();
+          break;
+        }
+      }
+      if (!activityVal) {
+        activityVal = m.place || m.address || m["وصف الموقع"] || "";
+      }
+      const actInp = document.getElementById("valActivity");
+      if (actInp) {
+        if (actInp.tagName === "INPUT") actInp.value = activityVal;
+        else actInp.textContent = activityVal || "-";
+      }
+      if (document.getElementById("valPlace")) document.getElementById("valPlace").value = activityVal;
 
       // Area tolerance banner
       const banner = document.getElementById("areaBanner");
@@ -1333,14 +1349,18 @@
       };
 
       const dateInp = document.getElementById("valDate");
-      const placeInp = document.getElementById("valPlace");
+      const actInp = document.getElementById("valActivity") || document.getElementById("valPlace");
       const notesInp = document.getElementById("valNotes") || document.getElementById("inNotes");
+
+      const activityVal = actInp ? actInp.value.trim() : (currentCaseData.metadata.activity || currentCaseData.metadata["وصف التعدي"] || "");
 
       const landPayload = {
         ...currentCaseData.metadata,
         Data_Int: dateInp ? dateInp.value.trim() : (currentCaseData.metadata.Data_Int || ""),
-        place: placeInp ? placeInp.value.trim() : (currentCaseData.metadata.place || currentCaseData.metadata.activity || ""),
-        address: placeInp ? placeInp.value.trim() : (currentCaseData.metadata.address || currentCaseData.metadata.place || ""),
+        activity: activityVal,
+        "وصف التعدي": activityVal,
+        place: activityVal,
+        address: activityVal,
         notes: notesInp ? notesInp.value.trim() : (currentCaseData.metadata.notes || ""),
         calc_area: currentCaseData.calculated_area,
         vertices: currentCaseData.vertices

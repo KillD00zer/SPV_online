@@ -245,11 +245,35 @@ def parse_csv_data(payload: Dict[str, Any] = Body(...)):
                     metadata[dir_k] = metadata[alias]
                     break
 
-    # Standardize site description / place
-    place_val = metadata.get('place') or metadata.get('activity') or metadata.get('address') or metadata.get('وصف الموقع') or metadata.get('وصف التعدي') or ''
-    if place_val:
-        metadata['place'] = place_val
-        metadata['address'] = place_val
+    # Standardize infringement description / activity (وصف التعدي موروث من عمود activity)
+    activity_val = ""
+    for k, v in metadata.items():
+        if k and v:
+            clean_k = k.strip().lower()
+            if clean_k in ['activity', 'activity_desc', 'activitydesc', 'infringement', 'infringement_desc']:
+                activity_val = str(v).strip()
+                break
+            if k.strip() in ['وصف التعدي', 'وصف_التعدي', 'النشاط', 'وصف النشاط', 'التعدي']:
+                activity_val = str(v).strip()
+                break
+
+    if not activity_val:
+        # Fallback to legacy fields if present
+        for k, v in metadata.items():
+            if k and v:
+                clean_k = k.strip().lower()
+                if clean_k in ['place', 'address']:
+                    activity_val = str(v).strip()
+                    break
+                if k.strip() in ['وصف الموقع', 'وصف_الموقع']:
+                    activity_val = str(v).strip()
+                    break
+
+    if activity_val:
+        metadata['activity'] = activity_val
+        metadata['وصف التعدي'] = activity_val
+        metadata['place'] = activity_val
+        metadata['address'] = activity_val
 
     if len(raw_vertices) < 3:
         raise HTTPException(status_code=400, detail="الملف لا يحتوي على 3 أركان على الأقل للأرض.")
@@ -288,8 +312,10 @@ def parse_csv_data(payload: Dict[str, Any] = Body(...)):
             maps = [str(a.get("map_id", "")).strip() for a in areas_list if a.get("map_id")]
             metadata["map_id"] = ", ".join(dict.fromkeys(maps)) if maps else "-"
 
-    if not metadata.get("address") and metadata.get("place"):
-        metadata["address"] = metadata.get("place")
+    if not metadata.get("activity") and metadata.get("place"):
+        metadata["activity"] = metadata.get("place")
+    if not metadata.get("وصف التعدي") and metadata.get("activity"):
+        metadata["وصف التعدي"] = metadata.get("activity")
 
     # Geodesic area calculation
     stated_area_val = 0.0
